@@ -1,1 +1,50 @@
-Supplier name 1,Supplier name 2,Similarity score
+pip install fuzzywuzzy pandas python-Levenshtein
+
+import pandas as pd
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+
+df=pd.read_excel('Data.xlsx')
+
+def find_similar_names(suppliers, threshold=80):
+    matches = []
+    for i in range(len(suppliers)):
+        for j in range (i+1, len(suppliers)):
+            name1, name2 = suppliers[i], suppliers[j]
+            score = fuzz.token_sort_ratio(name1, name2)
+            if score >= threshold:
+                matches.append((name1,name2,score))
+                return matches
+
+supplier_names = df['Supplier Name'].tolist()
+similar_names = find_similar_names(supplier_names)
+
+result_df=pd.DataFrame(similar_names, columns=['Supplier name 1', 'Supplier name 2', "Similarity score"])
+
+print(df.columns.tolist())
+
+print (result_df)
+
+result_df.to_csv('similar_suppliers.csv', index=False)
+
+dp=pd.read_excel('Data.xlsx')
+
+def find_similar_names(suppliers, threshold=80):
+    matches = []
+    supplier_set = set(suppliers)
+    for supplier in supplier_set:
+        similar = process.extract(supplier, supplier_set, scorer=fuzz.token_sort_ratio)
+        filtered = [(supplier, match[0], match[1]) for match in similar if match [1] >= threshold and supplier !=match[0]]
+        matches.extend(filtered)
+        
+    return matches
+
+
+supplier_name = dp['Supplier Name'].tolist()
+similar_names = find_similar_names(supplier_names)
+
+result_dp= pd.DataFrame(similar_names, columns=['Supplier Name1', 'Supplier Name2', 'Similarity Score'])
+
+print (result_dp)
+
+result_df.to_csv('similar_suppliers.csv', index=False)
